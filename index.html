@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3A4F86">
+<title>우리 아이 건강수첩 · 블루코</title>
+<style>
+  :root {
+    --coral: #E8836B;
+    --coral-soft: #FCE6DF;
+    --navy: #3A4F86;
+    --navy-dark: #26355E;
+    --yellow: #F6C85F;
+    --yellow-soft: #FDF1D3;
+    --mint: #6CC4A1;
+    --mint-soft: #DDF3EA;
+    --sky: #7FB8E6;
+    --sky-soft: #E1EFFA;
+    --cream: #FFF8F2;
+    --ink: #26355E;
+    --ink-sub: #4A5675;
+    --danger: #B3261E;
+    --danger-soft: #FDECEA;
+    --white: #FFFFFF;
+    --radius: 20px;
+    --shadow: 0 4px 14px rgba(38, 53, 94, 0.10);
+    --tabbar-h: 68px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", "Noto Sans KR", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px);
+  }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--navy); outline-offset: 2px; }
+
+  /* ---------- 상단 ---------- */
+  .app-header {
+    background: var(--coral);
+    padding: 14px 16px 18px;
+    border-radius: 0 0 28px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .app-header .inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  .brand-mark { width: 52px; height: 52px; flex: none; background: var(--white); border-radius: 50%; display: grid; place-items: center; box-shadow: var(--shadow); }
+  .brand-text .brand { margin: 0; font-size: 14px; font-weight: 800; color: var(--navy-dark); letter-spacing: 0.02em; }
+  .brand-text h1 { margin: 0; font-size: 22px; line-height: 1.3; font-weight: 800; color: var(--navy-dark); }
+  .header-deco { position: absolute; right: -8px; bottom: -10px; opacity: 0.25; pointer-events: none; }
+
+  main { max-width: 1132px; margin: 0 auto; padding: 0 16px; }
+
+  /* ---------- 종·단계 선택 ---------- */
+  .selector {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    margin: 16px 0 8px;
+  }
+  .selector-label { font-size: 14px; font-weight: 700; color: var(--ink-sub); margin: 0 0 8px; }
+  .species-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .species-btn {
+    min-height: 56px; border: 3px solid var(--sky-soft); background: var(--sky-soft);
+    border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 18px; font-weight: 800; color: var(--navy-dark);
+    transition: transform .1s;
+  }
+  .species-btn:active { transform: scale(0.97); }
+  .species-btn[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--white); }
+  .species-btn svg { width: 32px; height: 32px; flex: none; }
+  .stage-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stage-btn {
+    min-height: 64px; padding: 8px 4px; border-radius: 14px;
+    border: 3px solid var(--yellow-soft); background: var(--yellow-soft);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: var(--navy-dark); line-height: 1.25;
+  }
+  .stage-btn small { font-weight: 600; font-size: 13px; color: var(--ink-sub); margin-top: 2px; }
+  .stage-btn[aria-pressed="true"] { background: var(--white); border-color: var(--coral); box-shadow: inset 0 -5px 0 var(--coral); }
+  .stage-note { margin: 10px 0 0; font-size: 14px; color: var(--ink-sub); }
+
+  /* ---------- 화면(탭) ---------- */
+  .view { display: none; }
+  .view.active { display: block; }
+  .view-head { display: flex; align-items: center; gap: 10px; margin: 20px 0 12px; }
+  .view-head h2 { margin: 0; font-size: 21px; font-weight: 800; color: var(--navy-dark); }
+  .view-head .chip { background: var(--coral-soft); color: var(--navy-dark); font-size: 14px; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
+  .view-desc { margin: -4px 0 14px; color: var(--ink-sub); font-size: 15px; }
+
+  .card-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 768px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1100px) { .card-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .card {
+    background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 16px; position: relative; overflow: hidden;
+    border-top: 8px solid var(--accent, var(--sky));
+  }
+  .card-top { display: flex; align-items: flex-start; gap: 12px; }
+  .card-icon { width: 48px; height: 48px; flex: none; border-radius: 14px; display: grid; place-items: center; font-size: 26px; background: var(--accent-soft, var(--sky-soft)); }
+  .card h3 { margin: 0; font-size: 18px; line-height: 1.35; font-weight: 800; color: var(--navy-dark); }
+  .freq { display: inline-block; margin-top: 6px; padding: 3px 12px; border-radius: 999px; background: var(--navy); color: var(--white); font-size: 14px; font-weight: 800; }
+  .card dl { margin: 12px 0 0; }
+  .card dt { font-size: 14px; font-weight: 800; color: var(--coral-dark, #A9472F); margin-top: 8px; }
+  .card dd { margin: 2px 0 0; }
+  .senior-tag { position: absolute; top: 10px; right: 12px; font-size: 13px; font-weight: 800; color: var(--navy-dark); background: var(--yellow); padding: 2px 10px; border-radius: 999px; }
+
+  .acc-yellow { --accent: var(--yellow); --accent-soft: var(--yellow-soft); }
+  .acc-mint { --accent: var(--mint); --accent-soft: var(--mint-soft); }
+  .acc-sky { --accent: var(--sky); --accent-soft: var(--sky-soft); }
+  .acc-coral { --accent: var(--coral); --accent-soft: var(--coral-soft); }
+
+  /* ---------- 질병 카드 ---------- */
+  .disease-toggle {
+    width: 100%; min-height: 72px; border: 0; background: transparent; padding: 0; text-align: left;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .disease-toggle .txt { flex: 1; min-width: 0; }
+  .dz-name { display: block; font-size: 18px; line-height: 1.35; font-weight: 800; color: var(--navy-dark); }
+  .disease-toggle .summary { display: block; margin-top: 4px; color: var(--ink-sub); font-size: 15px; }
+  .disease-toggle .when { display: inline-block; margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--navy); }
+  .chev { width: 32px; height: 32px; flex: none; border-radius: 50%; background: var(--sky-soft); display: grid; place-items: center; transition: transform .2s; margin-top: 8px; }
+  .chev i { display: block; width: 10px; height: 10px; border-right: 3px solid var(--navy-dark); border-bottom: 3px solid var(--navy-dark); transform: translateY(-2px) rotate(45deg); }
+  .disease-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .focus-tag { display: inline-block; font-size: 13px; font-weight: 800; background: var(--coral); color: var(--navy-dark); padding: 2px 10px; border-radius: 999px; margin-bottom: 4px; }
+  .disease-detail { margin-top: 12px; border-top: 2px dashed var(--sky-soft); padding-top: 4px; }
+  .disease-detail[hidden] { display: none; }
+  .emergency { margin-top: 12px; background: var(--danger-soft); border: 2px solid var(--danger); border-radius: 14px; padding: 10px 12px; }
+  .emergency strong { color: var(--danger); display: flex; align-items: center; gap: 6px; font-size: 15px; }
+  .emergency p { margin: 4px 0 0; color: #5C1612; }
+  .disease-card.is-focus { box-shadow: 0 0 0 3px var(--coral), var(--shadow); }
+
+  /* ---------- 계산기 ---------- */
+  .calc { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 16px; border-top: 8px solid var(--mint); }
+  .calc-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .calc, .result, .field { min-width: 0; }
+  .input-unit input { width: 100%; }
+  @media (min-width: 768px) { .calc-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; } }
+  .field label { display: block; font-weight: 800; margin-bottom: 6px; color: var(--navy-dark); }
+  .field .hint { display: block; font-size: 14px; color: var(--ink-sub); margin-top: 4px; }
+  .input-unit { display: flex; align-items: center; border: 3px solid var(--sky-soft); border-radius: 14px; background: var(--white); overflow: hidden; }
+  .input-unit:focus-within { border-color: var(--navy); }
+  .input-unit input { flex: 1; min-width: 0; border: 0; outline: 0; padding: 12px 14px; min-height: 52px; font-size: 18px; font-weight: 700; background: transparent; }
+  .input-unit span { padding: 0 14px; font-weight: 800; color: var(--ink-sub); }
+  .field select { width: 100%; min-height: 56px; padding: 10px 12px; border: 3px solid var(--sky-soft); border-radius: 14px; background: var(--white); font-size: 17px; font-weight: 700; }
+  .field select:focus { border-color: var(--navy); outline: 0; }
+  .species-now { background: var(--sky-soft); border-radius: 12px; padding: 8px 12px; font-weight: 700; font-size: 15px; }
+  .calc-btn { width: 100%; min-height: 58px; border: 0; border-radius: 16px; background: var(--navy); color: var(--white); font-size: 19px; font-weight: 800; margin-top: 4px; box-shadow: 0 4px 0 var(--navy-dark); }
+  .calc-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--navy-dark); }
+  .error { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--danger-soft); color: var(--danger); font-weight: 700; }
+  .error[hidden] { display: none; }
+  .result { margin-top: 16px; background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 16px; border-top: 8px solid var(--coral); }
+  .result[hidden] { display: none; }
+  .result h3 { margin: 0 0 10px; font-size: 18px; color: var(--navy-dark); }
+  .result-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { background: var(--coral-soft); border-radius: 16px; padding: 12px; text-align: center; }
+  .stat.alt { background: var(--mint-soft); }
+  .stat .lbl { font-size: 14px; font-weight: 700; color: var(--ink-sub); }
+  .stat .num { font-size: 30px; font-weight: 900; color: var(--navy-dark); line-height: 1.2; }
+  .stat .num small { font-size: 16px; font-weight: 800; }
+  .per-meal { margin: 12px 0 0; background: var(--yellow-soft); border-radius: 14px; padding: 10px 12px; font-weight: 800; text-align: center; font-size: 17px; }
+  .tips { margin: 12px 0 0; padding-left: 20px; color: var(--ink-sub); font-size: 15px; }
+  .tips li + li { margin-top: 4px; }
+
+  /* ---------- 면책 ---------- */
+  .disclaimer { margin: 22px 0 8px; padding: 12px 14px; border-radius: 14px; background: var(--white); border: 2px dashed var(--sky); color: var(--ink-sub); font-size: 14px; display: flex; gap: 8px; }
+
+  /* ---------- 하단 탭바 ---------- */
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--navy);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -4px 16px rgba(38, 53, 94, 0.2);
+  }
+  .tabbar .inner { max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .tab {
+    min-height: 56px; border: 0; border-radius: 16px; background: transparent; color: #DCE3F5;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    font-size: 14px; font-weight: 800;
+  }
+  .tab .ico { font-size: 22px; line-height: 1; }
+  .tab[aria-selected="true"] { background: var(--white); color: var(--navy-dark); }
+
+  @media (min-width: 768px) {
+    body { padding-bottom: 32px; }
+    .tabbar { position: sticky; top: 0; bottom: auto; border-radius: 0; padding: 8px 16px; margin-bottom: 0; }
+    .tabbar .inner { max-width: 1100px; grid-template-columns: repeat(3, minmax(0, 220px)); justify-content: start; }
+    .tab { flex-direction: row; gap: 8px; font-size: 16px; }
+    .app-header { border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="inner">
+    <div class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 64 64" width="40" height="40"><use href="#ico-paw"/></svg>
+    </div>
+    <div class="brand-text">
+      <p class="brand">블루코 · Bluco</p>
+      <h1 id="appTitle">우리 아이 건강수첩</h1>
+    </div>
+  </div>
+  <svg class="header-deco" width="120" height="96" viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-paw"/></svg>
+</header>
+
+<nav class="tabbar" aria-label="주요 메뉴">
+  <div class="inner" role="tablist">
+    <button class="tab" role="tab" id="tab-health" aria-controls="view-health" aria-selected="true" data-view="health"><span class="ico" aria-hidden="true">🩺</span>건강체크</button>
+    <button class="tab" role="tab" id="tab-food" aria-controls="view-food" aria-selected="false" data-view="food"><span class="ico" aria-hidden="true">🥣</span>사료계산</button>
+    <button class="tab" role="tab" id="tab-disease" aria-controls="view-disease" aria-selected="false" data-view="disease"><span class="ico" aria-hidden="true">💊</span>질병정보</button>
+  </div>
+</nav>
+
+<main>
+  <section class="selector" aria-label="반려동물 종류와 생애 단계 선택">
+    <p class="selector-label">우리 아이는</p>
+    <div class="species-toggle">
+      <button class="species-btn" data-species="dog" aria-pressed="true">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-dog"/></svg>강아지
+      </button>
+      <button class="species-btn" data-species="cat" aria-pressed="false">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-cat"/></svg>고양이
+      </button>
+    </div>
+    <p class="selector-label">생애 단계</p>
+    <div class="stage-group" id="stageGroup"></div>
+    <p class="stage-note" id="stageNote"></p>
+  </section>
+
+  <!-- 건강체크 -->
+  <section class="view active" id="view-health" role="tabpanel" aria-labelledby="tab-health">
+    <div class="view-head"><h2>건강체크</h2><span class="chip" id="healthChip"></span></div>
+    <p class="view-desc">지금 시기에 챙겨야 할 것들을 무엇을 · 얼마나 자주 · 왜 순서로 정리했어요.</p>
+    <div class="card-grid" id="healthGrid"></div>
+    <p class="disclaimer"><span aria-hidden="true">🐾</span><span>이 정보는 일반적인 참고용이며 진단이나 치료를 대신하지 않습니다. 이상 증상이 있으면 수의사와 상담하세요.</span></p>
+  </section>
+
+  <!-- 사료계산 -->
+  <section class="view" id="view-food" role="tabpanel" aria-labelledby="tab-food">
+    <div class="view-head"><h2>사료 급여량 계산</h2><span class="chip" id="foodChip"></span></div>
+    <p class="view-desc">체중과 상태를 넣으면 하루에 필요한 칼로리와 사료 양을 알려드려요.</p>
+    <div class="calc-wrap">
+      <form class="calc" id="calcForm" novalidate>
+        <div class="calc-grid">
+          <div class="species-now" id="calcSpecies"></div>
+          <div class="field">
+            <label for="weight">몸무게</label>
+            <div class="input-unit">
+              <input id="weight" type="number" inputmode="decimal" step="0.1" min="0.5" placeholder="예: 5.2" autocomplete="off">
+              <span>kg</span>
+            </div>
+            <span class="hint" id="weightHint"></span>
+          </div>
+          <div class="field">
+            <label for="status">지금 상태</label>
+            <select id="status"></select>
+          </div>
+          <div class="field">
+            <label for="kcal">사료 칼로리</label>
+            <div class="input-unit">
+              <input id="kcal" type="number" inputmode="numeric" step="10" min="1000" autocomplete="off">
+              <span>kcal/kg</span>
+            </div>
+            <span class="hint">사료 포장지에 적힌 대사 에너지(kcal/kg)를 넣어 주세요.</span>
+          </div>
+          <button type="submit" class="calc-btn">급여량 계산하기</button>
+        </div>
+        <p class="error" id="calcError" role="alert" hidden></p>
+      </form>
+
+      <div class="result" id="result" hidden aria-live="polite">
+        <h3 id="resultTitle">하루 권장량</h3>
+        <div class="result-row">
+          <div class="stat"><div class="lbl">하루 칼로리</div><div class="num"><span id="outKcal">0</span><small> kcal</small></div></div>
+          <div class="stat alt"><div class="lbl">하루 사료 양</div><div class="num"><span id="outGram">0</span><small> g</small></div></div>
+        </div>
+        <p class="per-meal">1일 2회 급여 시 1회 <span id="outMeal">0</span>g</p>
+        <ul class="tips">
+          <li>간식은 하루 칼로리의 10% 이내로 주세요.</li>
+          <li>사료 포장지 권장량과 체중 변화를 보며 조절하세요.</li>
+          <li>2~4주마다 체중을 재고, 늘거나 줄면 양을 10%씩 조절해 보세요.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="disclaimer"><span aria-hidden="true">🐾</span><span>이 정보는 일반적인 참고용이며 진단이나 치료를 대신하지 않습니다. 이상 증상이 있으면 수의사와 상담하세요.</span></p>
+  </section>
+
+  <!-- 질병정보 -->
+  <section class="view" id="view-disease" role="tabpanel" aria-labelledby="tab-disease">
+    <div class="view-head"><h2>주의해야 할 질병</h2><span class="chip" id="diseaseChip"></span></div>
+    <p class="view-desc">카드를 누르면 증상과 관리 방법, 바로 병원에 가야 할 신호가 펼쳐져요.</p>
+    <div class="card-grid" id="diseaseGrid"></div>
+    <p class="disclaimer"><span aria-hidden="true">🐾</span><span>이 정보는 일반적인 참고용이며 진단이나 치료를 대신하지 않습니다. 이상 증상이 있으면 수의사와 상담하세요.</span></p>
+  </section>
+</main>
+
+<!-- 동물 그림(SVG) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ico-paw" viewBox="0 0 64 64">
+      <ellipse cx="32" cy="42" rx="14" ry="12" fill="#3A4F86"/>
+      <ellipse cx="16" cy="26" rx="6" ry="8" fill="#3A4F86"/>
+      <ellipse cx="27" cy="16" rx="6" ry="8" fill="#3A4F86"/>
+      <ellipse cx="37" cy="16" rx="6" ry="8" fill="#3A4F86"/>
+      <ellipse cx="48" cy="26" rx="6" ry="8" fill="#3A4F86"/>
+    </symbol>
+    <symbol id="ico-dog" viewBox="0 0 64 64">
+      <ellipse cx="14" cy="26" rx="9" ry="15" fill="#C46A54" transform="rotate(18 14 26)"/>
+      <ellipse cx="50" cy="26" rx="9" ry="15" fill="#C46A54" transform="rotate(-18 50 26)"/>
+      <circle cx="32" cy="34" r="20" fill="#F6C85F"/>
+      <ellipse cx="32" cy="43" rx="11" ry="8" fill="#FFF8F2"/>
+      <circle cx="25" cy="31" r="3" fill="#26355E"/>
+      <circle cx="39" cy="31" r="3" fill="#26355E"/>
+      <ellipse cx="32" cy="39" rx="4" ry="3" fill="#26355E"/>
+      <path d="M29 45 q3 3 6 0" stroke="#26355E" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="ico-cat" viewBox="0 0 64 64">
+      <path d="M12 12 L24 22 L14 30 Z" fill="#E8836B"/>
+      <path d="M52 12 L40 22 L50 30 Z" fill="#E8836B"/>
+      <circle cx="32" cy="35" r="20" fill="#E8836B"/>
+      <circle cx="24" cy="32" r="3" fill="#26355E"/>
+      <circle cx="40" cy="32" r="3" fill="#26355E"/>
+      <path d="M30 38 h4 l-2 2.5 z" fill="#26355E"/>
+      <path d="M32 40.5 q-3 3 -6 1 M32 40.5 q3 3 6 1" stroke="#26355E" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M10 37 h10 M10 42 h10 M44 37 h10 M44 42 h10" stroke="#FFF8F2" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ======================================================
+     정보 데이터 (내용만 고칠 때는 이 부분만 수정하세요)
+     ====================================================== -->
+<script>
+const DATA = {
+  species: {
+    dog: {
+      name: "강아지",
+      stages: {
+        young:  { label: "어린 시기", range: "~1세" },
+        adult:  { label: "성견", range: "1~7세" },
+        senior: { label: "시니어", range: "7세 이상" }
+      },
+      note: "대형견은 5~6세부터 시니어로 보고 관리를 시작하는 것이 좋아요.",
+      weightRange: [0.5, 90],
+      defaultKcal: 3500,
+      status: [
+        { id: "baby",     label: "어린 시기 (4개월 미만)", factor: 3.0 },
+        { id: "junior",   label: "어린 시기 (4개월~1세)", factor: 2.0 },
+        { id: "neutered", label: "성견 · 중성화",          factor: 1.6 },
+        { id: "intact",   label: "성견 · 중성화 안 함",     factor: 1.8 },
+        { id: "senior",   label: "시니어",                 factor: 1.4 },
+        { id: "diet",     label: "체중 감량 필요",          factor: 1.0 },
+        { id: "active",   label: "활동량 많음",             factor: 2.0 }
+      ],
+      stageDefaultStatus: { young: "junior", adult: "neutered", senior: "senior" }
+    },
+    cat: {
+      name: "고양이",
+      stages: {
+        young:  { label: "어린 시기", range: "~1세" },
+        adult:  { label: "성묘", range: "1~10세" },
+        senior: { label: "시니어", range: "10세 이상" }
+      },
+      note: "고양이는 아픈 티를 잘 내지 않아요. 작은 변화도 기록해 두세요.",
+      weightRange: [0.5, 15],
+      defaultKcal: 3800,
+      status: [
+        { id: "baby",     label: "어린 시기 (4개월 미만)", factor: 2.5 },
+        { id: "junior",   label: "어린 시기 (4개월~1세)", factor: 2.5 },
+        { id: "neutered", label: "성묘 · 중성화",          factor: 1.2 },
+        { id: "intact",   label: "성묘 · 중성화 안 함",     factor: 1.4 },
+        { id: "senior",   label: "시니어",                 factor: 1.1 },
+        { id: "diet",     label: "체중 감량 필요",          factor: 0.8 },
+        { id: "active",   label: "활동량 많음",             factor: 1.6 }
+      ],
+      stageDefaultStatus: { young: "junior", adult: "neutered", senior: "senior" }
+    }
+  },
+
+  /* 건강체크: icon, title, freq(주기), what(무엇을), why(왜), accent(yellow|mint|sky|coral), senior(시니어 강조) */
+  health: {
+    dog: {
+      young: [
+        { icon: "💉", title: "기초 예방접종", freq: "2~4주 간격", what: "생후 6~8주부터 종합백신·코로나·켄넬코프를 맞히고, 생후 3개월 이후 광견병 접종을 해요.", why: "어린 강아지는 면역력이 약해 파보·홍역 같은 감염병에 치명적일 수 있어요.", accent: "coral" },
+        { icon: "🪱", title: "심장사상충·구충 예방", freq: "매월", what: "심장사상충 예방약과 내·외부 기생충 예방을 수의사 안내에 맞춰 시작해요.", why: "기생충은 성장 저하와 설사를 일으키고, 심장사상충은 치료가 어려워요.", accent: "mint" },
+        { icon: "⚖️", title: "체중 재기", freq: "매주", what: "같은 시간, 같은 저울로 몸무게를 재서 기록해요.", why: "잘 자라고 있는지, 사료 양이 맞는지 알 수 있는 가장 쉬운 방법이에요.", accent: "yellow" },
+        { icon: "🪥", title: "양치 습관 들이기", freq: "매일", what: "손가락 칫솔이나 거즈로 입 만지기부터 천천히 연습해요.", why: "어릴 때 익숙해져야 평생 치아 관리가 쉬워져요.", accent: "sky" },
+        { icon: "🐕", title: "사회화 경험", freq: "매일 조금씩", what: "다양한 사람·소리·장소를 긍정적으로 경험하게 해요. 접종 완료 전에는 안아서 바깥을 보여 주세요.", why: "생후 3~14주 경험이 평생 성격과 스트레스 반응에 영향을 줘요.", accent: "yellow" },
+        { icon: "🩺", title: "중성화 상담", freq: "생후 6개월 전후", what: "품종과 크기에 맞는 시기를 수의사와 상담해요.", why: "생식기 질환과 일부 종양 위험을 줄이는 데 도움이 돼요.", accent: "mint" }
+      ],
+      adult: [
+        { icon: "💉", title: "추가 예방접종", freq: "연 1회", what: "종합백신 추가접종과 광견병 접종을 일정에 맞춰 해요.", why: "면역력은 시간이 지나면 떨어져서 주기적으로 유지해야 해요.", accent: "coral" },
+        { icon: "🪱", title: "심장사상충·외부기생충", freq: "매월", what: "심장사상충 예방약과 진드기·벼룩 예방을 빠짐없이 해요.", why: "산책할 때마다 모기·진드기에 노출될 수 있어요.", accent: "mint" },
+        { icon: "🪥", title: "양치", freq: "매일", what: "반려동물 전용 치약과 칫솔로 하루 한 번 닦아요.", why: "3세 이상 강아지 대부분이 치주질환을 겪고, 심장·신장에도 영향을 줄 수 있어요.", accent: "sky" },
+        { icon: "⚖️", title: "체중·체형 확인", freq: "매월", what: "몸무게를 재고, 갈비뼈가 손에 살짝 만져지는지 확인해요.", why: "비만은 관절·심장 질환의 출발점이에요.", accent: "yellow" },
+        { icon: "🩺", title: "건강검진", freq: "연 1회", what: "신체검사와 기본 혈액검사·소변검사를 받아요.", why: "건강할 때의 수치를 알아 두면 나중에 변화를 빨리 알아챌 수 있어요.", accent: "coral" },
+        { icon: "👂", title: "귀·피부 살피기", freq: "매주", what: "귀 냄새와 빨갛게 된 곳, 피부 각질이나 긁는 행동을 살펴요.", why: "외이염과 피부염은 강아지가 병원에 가장 자주 가는 이유예요.", accent: "mint" }
+      ],
+      senior: [
+        { icon: "🩺", title: "노령 건강검진", freq: "연 2회", what: "혈액·소변검사, 혈압, 필요하면 엑스레이·초음파까지 받아요.", why: "나이 들면 몸의 변화가 빨라서 6개월이 사람의 몇 년과 같아요.", accent: "coral", senior: true },
+        { icon: "❤️", title: "심장·호흡 체크", freq: "매일", what: "잠잘 때 1분 동안 숨 쉬는 횟수를 세어 기록하고, 기침이 늘었는지 봐요.", why: "자는 동안 분당 30회 이상이면 심장 질환 신호일 수 있어요.", accent: "coral", senior: true },
+        { icon: "💧", title: "물·소변량 관찰", freq: "매일", what: "물그릇이 비는 속도와 소변 횟수·양을 살펴요.", why: "물을 많이 마시고 소변이 늘면 신장병·당뇨·쿠싱증후군의 신호일 수 있어요.", accent: "sky", senior: true },
+        { icon: "🦴", title: "관절 체크", freq: "매주", what: "일어날 때 뻣뻣한지, 계단·소파 오르기를 피하는지, 산책 속도가 줄었는지 봐요.", why: "관절염은 서서히 진행돼서 '나이 탓'으로 넘기기 쉬워요.", accent: "yellow", senior: true },
+        { icon: "🧠", title: "행동·인지 변화", freq: "매일", what: "밤에 돌아다니거나 짖는지, 구석에 끼는지, 이름에 반응이 줄었는지 기록해요.", why: "인지기능장애는 일찍 알수록 환경 조정과 치료로 늦출 수 있어요.", accent: "mint", senior: true },
+        { icon: "👀", title: "눈·귀 확인", freq: "매월", what: "눈이 뿌옇게 변했는지, 물건에 부딪히는지, 소리에 반응하는지 봐요.", why: "백내장과 청력 저하는 노령견에게 흔해요.", accent: "sky", senior: true },
+        { icon: "⚖️", title: "체중·근육량", freq: "매월", what: "몸무게와 함께 뒷다리·등 근육이 빠지는지 만져 봐요.", why: "갑자기 살이 빠지면 숨은 질병의 신호일 수 있어요.", accent: "yellow" },
+        { icon: "🪥", title: "치아·스케일링 상담", freq: "매일 양치 · 연 1회 상담", what: "매일 양치하고, 검진 때 스케일링이 필요한지 상담해요.", why: "치주질환이 심하면 통증 때문에 밥을 잘 못 먹게 돼요.", accent: "mint" },
+        { icon: "💉", title: "예방접종·기생충 예방", freq: "연 1회 · 매월", what: "나이가 들어도 접종과 심장사상충 예방은 계속해요. 일정은 건강 상태에 맞게 상담해요.", why: "노령견은 면역력이 떨어져 감염에 더 취약해요.", accent: "coral" }
+      ]
+    },
+    cat: {
+      young: [
+        { icon: "💉", title: "기초 예방접종", freq: "3~4주 간격", what: "생후 6~8주부터 종합백신을 맞히고, 수의사와 광견병 접종 시기를 정해요.", why: "범백혈구감소증·허피스 같은 감염병은 새끼 고양이에게 특히 위험해요.", accent: "coral" },
+        { icon: "🪱", title: "구충", freq: "매월", what: "내부기생충 구충제를 수의사 안내에 맞춰 먹여요.", why: "기생충은 설사와 성장 부진의 흔한 원인이에요.", accent: "mint" },
+        { icon: "⚖️", title: "체중 재기", freq: "매주", what: "주방 저울 등으로 몸무게를 재서 기록해요.", why: "잘 자라는지 확인하고 사료 양을 맞출 수 있어요.", accent: "yellow" },
+        { icon: "🚽", title: "화장실 습관", freq: "매일", what: "모래를 깨끗이 하고 대소변 모양과 횟수를 봐요.", why: "설사나 배변 실수는 건강 이상의 첫 신호일 수 있어요.", accent: "sky" },
+        { icon: "🪥", title: "양치·몸 만지기 연습", freq: "매일 조금씩", what: "입·발·귀를 만지는 것에 간식과 함께 익숙해지게 해요.", why: "어릴 때 익혀야 커서 양치와 진료가 수월해요.", accent: "sky" },
+        { icon: "🩺", title: "중성화 상담", freq: "생후 5~6개월 전후", what: "적절한 시기를 수의사와 상담해요.", why: "발정 스트레스와 생식기 질환, 스프레이 행동을 줄일 수 있어요.", accent: "mint" }
+      ],
+      adult: [
+        { icon: "💉", title: "추가 예방접종", freq: "1~3년마다", what: "생활 환경(실내·외출)에 맞는 접종 주기를 수의사와 정해요.", why: "실내 고양이도 사람을 통해 감염병에 노출될 수 있어요.", accent: "coral" },
+        { icon: "🪱", title: "기생충 예방", freq: "매월", what: "내·외부 기생충과 심장사상충 예방을 수의사와 상담해 진행해요.", why: "모기는 실내에도 들어와요.", accent: "mint" },
+        { icon: "💧", title: "물·화장실 관찰", freq: "매일", what: "물 마시는 양과 소변 덩어리 크기·개수를 살펴요.", why: "하부요로질환은 성묘에게 흔하고, 수컷은 요도가 막히면 응급이에요.", accent: "sky" },
+        { icon: "⚖️", title: "체중 확인", freq: "매월", what: "몸무게를 재고 배·옆구리 살을 만져 봐요.", why: "중성화한 실내 고양이는 살이 찌기 쉬워요.", accent: "yellow" },
+        { icon: "🩺", title: "건강검진", freq: "연 1회", what: "신체검사와 기본 혈액·소변검사를 받아요.", why: "고양이는 아파도 잘 숨겨서 검사로 찾는 경우가 많아요.", accent: "coral" },
+        { icon: "🪥", title: "양치", freq: "매일", what: "고양이 전용 치약으로 송곳니·어금니 바깥쪽을 닦아요.", why: "치주질환과 치아흡수병변을 예방하는 데 도움이 돼요.", accent: "mint" }
+      ],
+      senior: [
+        { icon: "🩺", title: "노령 건강검진", freq: "연 2회", what: "혈액(신장 수치·갑상선 호르몬)·소변검사와 혈압 측정을 받아요.", why: "신장병·갑상선기능항진증은 노령묘에게 아주 흔하고, 일찍 찾을수록 관리가 쉬워요.", accent: "coral", senior: true },
+        { icon: "💧", title: "물·소변량 관찰", freq: "매일", what: "물그릇 줄어드는 양, 소변 덩어리가 커지거나 많아지는지 봐요.", why: "물을 많이 마시고 소변이 늘면 신장병·당뇨의 신호예요.", accent: "sky", senior: true },
+        { icon: "⚖️", title: "체중 변화", freq: "매월", what: "몸무게를 꼭 기록하고, 줄어드는지 특히 주의해요.", why: "밥을 잘 먹는데 살이 빠지면 갑상선이나 당뇨를 의심해 볼 수 있어요.", accent: "yellow", senior: true },
+        { icon: "🍽️", title: "식욕·구토 관찰", freq: "매일", what: "밥 먹는 양과 속도, 구토 횟수를 기록해요.", why: "고양이가 하루 이상 굶으면 간에 문제가 생길 수 있어요.", accent: "coral", senior: true },
+        { icon: "🦴", title: "관절·점프 체크", freq: "매주", what: "높은 곳에 덜 오르는지, 화장실 턱을 넘기 힘들어하는지 봐요.", why: "노령묘 상당수가 관절염이 있지만 티를 거의 안 내요.", accent: "mint", senior: true },
+        { icon: "🧶", title: "털·그루밍 변화", freq: "매주", what: "털이 푸석하거나 뭉치는지, 그루밍이 줄었는지 살펴요.", why: "그루밍 감소는 통증·관절 문제·컨디션 저하의 신호일 수 있어요.", accent: "sky", senior: true },
+        { icon: "🧠", title: "행동·인지 변화", freq: "매일", what: "밤에 크게 울거나, 화장실 실수를 하거나, 멍하게 있는 시간이 늘었는지 봐요.", why: "인지 변화는 환경 조정으로 불편을 줄일 수 있어요.", accent: "yellow" },
+        { icon: "🪥", title: "치아 확인", freq: "매일 양치 · 연 1회 상담", what: "입 냄새, 침 흘림, 한쪽으로 씹는 모습을 살피고 검진 때 상담해요.", why: "치아 통증이 있으면 밥을 잘 못 먹어 체중이 줄어요.", accent: "mint" }
+      ]
+    }
+  },
+
+  /* 질병: stages(주의 시기), summary(한 줄), symptoms, when, care, emergency */
+  disease: {
+    dog: [
+      { icon: "🦠", name: "파보바이러스 장염", stages: ["young"], summary: "접종이 끝나지 않은 어린 강아지에게 치명적인 감염병", symptoms: "심한 구토, 피 섞인 설사, 기운 없음, 식욕 없음", when: "생후 6주~6개월, 접종 완료 전", care: "기초접종을 끝까지 맞히고, 접종 완료 전에는 다른 강아지가 많은 곳을 피해요.", emergency: "어린 강아지가 구토와 설사를 함께 하거나 피 섞인 변을 보면 바로 병원에 가세요." },
+      { icon: "🦷", name: "치주질환", stages: ["adult", "senior"], summary: "치석과 잇몸 염증으로 시작해 이가 빠지기까지 하는 흔한 질환", symptoms: "입 냄새, 누런 치석, 잇몸 출혈, 한쪽으로 씹기", when: "3세 이후 대부분, 소형견은 더 일찍", care: "매일 양치, 정기 검진, 필요할 때 스케일링을 해요.", emergency: "얼굴이 붓거나, 입을 아파해서 밥을 못 먹으면 바로 병원에 가세요." },
+      { icon: "🦵", name: "슬개골 탈구", stages: ["young", "adult"], summary: "무릎뼈가 제자리에서 빠지는 질환, 소형견에게 흔해요", symptoms: "한쪽 뒷다리를 들고 깡총거림, 다리를 털거나 뻗기", when: "어린 시기부터 나타날 수 있음", care: "미끄럼 방지 매트, 적정 체중 유지, 높은 곳 뛰어내리기 줄이기.", emergency: "다리를 전혀 딛지 못하거나 심하게 아파하면 바로 병원에 가세요." },
+      { icon: "🐾", name: "피부염·알레르기", stages: ["young", "adult"], summary: "가려움과 붉은 피부, 반복되는 귀 염증", symptoms: "계속 긁기·핥기, 발 핥기, 붉은 피부, 귀 냄새", when: "1~3세에 시작하는 경우가 많음", care: "기생충 예방, 피부 상태 관찰, 원인(음식·환경) 확인을 수의사와 함께해요.", emergency: "얼굴이 갑자기 붓거나 두드러기와 함께 숨쉬기 힘들어하면 바로 병원에 가세요." },
+      { icon: "🍖", name: "비만", stages: ["adult", "senior"], summary: "관절·심장·당뇨 문제로 이어지는 출발점", symptoms: "갈비뼈가 안 만져짐, 허리 라인 없음, 쉽게 지침", when: "중성화 후·성견기부터", care: "사료 양 계량, 간식 10% 이내, 매일 산책.", emergency: "갑자기 숨이 가쁘거나 운동 중 쓰러지면 바로 병원에 가세요." },
+      { icon: "❤️", name: "이첨판 심장질환", stages: ["senior"], summary: "심장 판막이 약해져 피가 거꾸로 새는 노령 소형견의 대표 질환", symptoms: "기침(특히 밤·새벽), 쉽게 지침, 잠잘 때 숨이 빠름", when: "7세 이후 소형견에게 흔함", care: "정기 청진, 잠잘 때 호흡수 기록, 진단 시 꾸준한 약 복용.", emergency: "잠잘 때 호흡이 분당 40회 이상이거나, 혀가 보라색이거나, 쓰러지면 바로 병원에 가세요." },
+      { icon: "🦴", name: "관절염", stages: ["senior"], summary: "연골이 닳아 생기는 만성 통증", symptoms: "일어날 때 뻣뻣함, 계단 피하기, 산책 거부", when: "노령기, 대형견·비만견은 더 일찍", care: "적정 체중, 미끄럼 방지, 짧고 자주 하는 산책, 수의사 처방 관리.", emergency: "갑자기 일어서지 못하거나 뒷다리를 끌면 바로 병원에 가세요." },
+      { icon: "💧", name: "만성 신장질환", stages: ["senior"], summary: "신장 기능이 서서히 떨어지는 질환", symptoms: "물을 많이 마시고 소변이 늘어남, 식욕 저하, 체중 감소", when: "노령기", care: "연 2회 혈액·소변검사, 신선한 물 충분히, 진단 시 처방식.", emergency: "계속 토하거나 하루 이상 소변을 못 보면 바로 병원에 가세요." },
+      { icon: "👀", name: "백내장", stages: ["senior"], summary: "수정체가 하얗게 변해 시력이 떨어지는 질환", symptoms: "눈동자가 뿌옇게 보임, 물건에 부딪힘, 어두운 곳을 무서워함", when: "노령기, 당뇨가 있으면 더 빨리", care: "정기 안과 검진, 가구 배치를 바꾸지 않기.", emergency: "눈이 빨갛게 붓거나, 눈을 못 뜨고 아파하면 바로 병원에 가세요." },
+      { icon: "🧠", name: "인지기능장애", stages: ["senior"], summary: "사람의 치매와 비슷한 뇌 노화 질환", symptoms: "밤에 배회·짖음, 구석에 끼어 있음, 배변 실수, 가족을 못 알아봄", when: "10세 이후 늘어남", care: "규칙적인 생활, 머리 쓰는 놀이, 수의사 상담 후 보조제·약물.", emergency: "갑자기 빙빙 돌거나 고개가 한쪽으로 기울고 발작하면 바로 병원에 가세요." }
+    ],
+    cat: [
+      { icon: "🤧", name: "상부호흡기 감염", stages: ["young"], summary: "허피스·칼리시 바이러스로 생기는 고양이 감기", symptoms: "재채기, 콧물, 눈곱, 결막염, 식욕 저하", when: "새끼 고양이, 여러 마리가 함께 살 때", care: "기초접종, 스트레스 줄이기, 눈·코 깨끗이 닦기.", emergency: "하루 이상 아무것도 안 먹거나 입을 벌리고 숨 쉬면 바로 병원에 가세요." },
+      { icon: "🦷", name: "치주질환", stages: ["adult", "senior"], summary: "치석·잇몸 염증과 치아흡수병변", symptoms: "입 냄새, 침 흘림, 사료를 흘리거나 한쪽으로 씹기", when: "3세 이후 흔함", care: "양치, 덴탈 관리, 정기 검진.", emergency: "입에서 피가 나거나 아파서 밥을 전혀 못 먹으면 바로 병원에 가세요." },
+      { icon: "🚽", name: "하부요로질환", stages: ["adult"], summary: "방광염·결석으로 소변보기 힘들어지는 질환", symptoms: "화장실을 자주 가는데 소변이 조금, 피 섞인 소변, 화장실 밖 실수", when: "2~6세 성묘, 실내·비만·스트레스", care: "물 많이 마시게 하기(습식·분수대), 화장실 청결, 스트레스 줄이기.", emergency: "특히 수컷이 힘을 주는데 소변이 안 나오면 몇 시간 안에 생명이 위험해요. 바로 병원에 가세요." },
+      { icon: "🍖", name: "비만", stages: ["adult", "senior"], summary: "당뇨·관절염·지방간의 원인", symptoms: "배가 처짐, 그루밍을 잘 못함, 점프를 안 함", when: "중성화 후 실내 고양이", care: "사료 계량, 사냥 놀이, 급격한 다이어트는 피하기.", emergency: "살찐 고양이가 갑자기 밥을 끊으면 지방간 위험이 있어 바로 병원에 가세요." },
+      { icon: "💧", name: "만성 신장질환", stages: ["senior"], summary: "노령묘에게 가장 흔한 질환 중 하나", symptoms: "물을 많이 마심, 소변 덩어리가 커짐, 체중 감소, 구토", when: "10세 이후 크게 늘어남", care: "연 2회 검사, 수분 섭취 늘리기, 진단 시 처방식.", emergency: "계속 토하고 기운이 없거나 입에서 암모니아 냄새가 나면 바로 병원에 가세요." },
+      { icon: "🦋", name: "갑상선기능항진증", stages: ["senior"], summary: "호르몬이 과하게 나와 몸이 빠르게 소모되는 질환", symptoms: "잘 먹는데 살이 빠짐, 밤에 울음, 과잉 행동, 구토", when: "10세 이후", care: "정기 혈액검사(갑상선 호르몬), 진단 시 약·처방식.", emergency: "숨이 가쁘거나 심장이 매우 빨리 뛰고 기운이 없으면 바로 병원에 가세요." },
+      { icon: "🍬", name: "당뇨병", stages: ["senior", "adult"], summary: "혈당 조절이 안 되는 질환, 비만 고양이에게 많아요", symptoms: "물과 소변이 늘어남, 잘 먹는데 살이 빠짐, 뒷다리로 뒤꿈치를 대고 걸음", when: "중년~노령, 비만", care: "적정 체중 유지, 진단 시 인슐린과 식이 관리.", emergency: "비틀거리거나 경련, 축 처짐이 있으면 저혈당일 수 있어 바로 병원에 가세요." },
+      { icon: "❤️", name: "비대성 심근병증", stages: ["adult", "senior"], summary: "심장 근육이 두꺼워지는 고양이의 대표 심장병", symptoms: "증상이 거의 없다가 호흡이 빨라지거나 입을 벌리고 숨 쉼", when: "모든 나이, 일부 품종에 많음", care: "정기 청진, 필요 시 심장 초음파, 잠잘 때 호흡수 기록.", emergency: "갑자기 뒷다리를 못 쓰고 울거나, 입을 벌리고 숨 쉬면 응급이에요. 바로 병원에 가세요." },
+      { icon: "🦴", name: "관절염", stages: ["senior"], summary: "노령묘 대부분이 가진, 잘 드러나지 않는 통증", symptoms: "높은 곳에 안 올라감, 화장실 밖 실수, 그루밍 감소", when: "노령기", care: "낮은 화장실·계단 놓기, 적정 체중, 수의사 처방 관리.", emergency: "갑자기 다리를 못 딛거나 만지면 크게 아파하면 바로 병원에 가세요." }
+    ]
+  }
+};
+</script>
+
+<!-- ======================================================
+     동작
+     ====================================================== -->
+<script>
+(function () {
+  "use strict";
+
+  const state = { species: "dog", stage: "adult", view: "health", kcalEdited: false };
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  /* ---- 계산 ---- */
+  function calcFeeding(weightKg, factor, kcalPerKg) {
+    const rer = 70 * Math.pow(weightKg, 0.75);
+    const der = rer * factor;
+    const grams = der / kcalPerKg * 1000;
+    return { kcal: Math.round(der), grams: Math.round(grams), perMeal: Math.round(grams / 2) };
+  }
+  window.calcFeeding = calcFeeding; // 검증용
+
+  /* ---- 종·단계 ---- */
+  function renderStages() {
+    const sp = DATA.species[state.species];
+    const group = $("stageGroup");
+    group.innerHTML = Object.entries(sp.stages).map(([key, s]) =>
+      `<button class="stage-btn" data-stage="${key}" aria-pressed="${key === state.stage}">${esc(s.label)}<small>${esc(s.range)}</small></button>`
+    ).join("");
+    $("stageNote").textContent = sp.note;
+    document.querySelectorAll(".species-btn").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.species === state.species)));
+  }
+
+  function chipText() {
+    const sp = DATA.species[state.species];
+    return `${sp.name} · ${sp.stages[state.stage].label}`;
+  }
+
+  /* ---- 건강체크 ---- */
+  function renderHealth() {
+    const list = DATA.health[state.species][state.stage];
+    $("healthChip").textContent = chipText();
+    $("healthGrid").innerHTML = list.map((c) => `
+      <article class="card acc-${c.accent}">
+        ${c.senior ? '<span class="senior-tag">시니어 필수</span>' : ""}
+        <div class="card-top">
+          <div class="card-icon" aria-hidden="true">${c.icon}</div>
+          <div>
+            <h3>${esc(c.title)}</h3>
+            <span class="freq">주기 · ${esc(c.freq)}</span>
+          </div>
+        </div>
+        <dl>
+          <dt>무엇을</dt><dd>${esc(c.what)}</dd>
+          <dt>왜</dt><dd>${esc(c.why)}</dd>
+        </dl>
+      </article>`).join("");
+  }
+
+  /* ---- 질병 ---- */
+  function renderDisease() {
+    const list = DATA.disease[state.species]
+      .map((d, i) => ({ d, i, focus: d.stages.includes(state.stage) }))
+      .sort((a, b) => (b.focus - a.focus) || (b.focus && (a.d.stages.length - b.d.stages.length)) || (a.i - b.i));
+    $("diseaseChip").textContent = chipText();
+    $("diseaseGrid").innerHTML = list.map(({ d, i, focus }) => {
+      const id = `dz-${state.species}-${i}`;
+      return `
+      <article class="card disease-card acc-sky${focus ? " is-focus" : ""}">
+        <button class="disease-toggle" aria-expanded="false" aria-controls="${id}">
+          <span class="card-icon" aria-hidden="true">${d.icon}</span>
+          <span class="txt">
+            ${focus ? '<span class="focus-tag">이 시기 주의</span><br>' : ""}
+            <span class="dz-name">${esc(d.name)}</span>
+            <span class="summary">${esc(d.summary)}</span>
+            <span class="when">🗓️ ${esc(d.when)}</span>
+          </span>
+          <span class="chev" aria-hidden="true"><i></i></span>
+        </button>
+        <div class="disease-detail" id="${id}" hidden>
+          <dl>
+            <dt>주요 증상</dt><dd>${esc(d.symptoms)}</dd>
+            <dt>잘 생기는 시기</dt><dd>${esc(d.when)}</dd>
+            <dt>예방·관리</dt><dd>${esc(d.care)}</dd>
+          </dl>
+          <div class="emergency"><strong><span aria-hidden="true">🚨</span>바로 병원 가야 할 신호</strong><p>${esc(d.emergency)}</p></div>
+        </div>
+      </article>`;
+    }).join("");
+  }
+
+  /* ---- 계산기 ---- */
+  function renderCalc() {
+    const sp = DATA.species[state.species];
+    $("foodChip").textContent = chipText();
+    $("calcSpecies").textContent = `${sp.name} 기준으로 계산해요 (위에서 바꿀 수 있어요)`;
+    $("weightHint").textContent = `${sp.weightRange[0]}~${sp.weightRange[1]}kg 사이로 입력해 주세요.`;
+    $("status").innerHTML = sp.status.map((s) => `<option value="${s.id}">${esc(s.label)}</option>`).join("");
+    $("status").value = sp.stageDefaultStatus[state.stage];
+    if (!state.kcalEdited) $("kcal").value = sp.defaultKcal;
+    $("result").hidden = true;
+    $("calcError").hidden = true;
+  }
+
+  function showError(msg) {
+    $("calcError").textContent = msg;
+    $("calcError").hidden = false;
+    $("result").hidden = true;
+  }
+
+  function onCalc(e) {
+    e.preventDefault();
+    const sp = DATA.species[state.species];
+    const wRaw = $("weight").value.trim();
+    const kRaw = $("kcal").value.trim();
+    const w = parseFloat(wRaw);
+    const k = parseFloat(kRaw);
+    const [min, max] = sp.weightRange;
+    if (wRaw === "" || isNaN(w)) return showError("몸무게를 입력해 주세요.");
+    if (w < min || w > max) return showError(`${sp.name} 몸무게는 ${min}~${max}kg 사이로 입력해 주세요.`);
+    if (kRaw === "" || isNaN(k) || k < 1000 || k > 6000) return showError("사료 칼로리는 1000~6000kcal/kg 사이로 입력해 주세요.");
+    const st = sp.status.find((s) => s.id === $("status").value);
+    const r = calcFeeding(w, st.factor, k);
+    $("calcError").hidden = true;
+    $("resultTitle").textContent = `${sp.name} ${w}kg · ${st.label}`;
+    $("outKcal").textContent = r.kcal.toLocaleString("ko-KR");
+    $("outGram").textContent = r.grams.toLocaleString("ko-KR");
+    $("outMeal").textContent = r.perMeal.toLocaleString("ko-KR");
+    $("result").hidden = false;
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  /* ---- 탭 ---- */
+  function setView(view) {
+    state.view = view;
+    document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.view === view)));
+    document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === `view-${view}`));
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+
+  function renderAll() {
+    renderStages();
+    renderHealth();
+    renderDisease();
+    renderCalc();
+  }
+
+  /* ---- 이벤트 ---- */
+  document.querySelector(".species-toggle").addEventListener("click", (e) => {
+    const b = e.target.closest(".species-btn");
+    if (!b || b.dataset.species === state.species) return;
+    state.species = b.dataset.species;
+    state.kcalEdited = false;
+    renderAll();
+  });
+  $("stageGroup").addEventListener("click", (e) => {
+    const b = e.target.closest(".stage-btn");
+    if (!b || b.dataset.stage === state.stage) return;
+    state.stage = b.dataset.stage;
+    renderAll();
+  });
+  document.querySelector(".tabbar").addEventListener("click", (e) => {
+    const t = e.target.closest(".tab");
+    if (t) setView(t.dataset.view);
+  });
+  $("diseaseGrid").addEventListener("click", (e) => {
+    const b = e.target.closest(".disease-toggle");
+    if (!b) return;
+    const open = b.getAttribute("aria-expanded") === "true";
+    b.setAttribute("aria-expanded", String(!open));
+    $(b.getAttribute("aria-controls")).hidden = open;
+  });
+  $("kcal").addEventListener("input", () => { state.kcalEdited = true; });
+  $("calcForm").addEventListener("submit", onCalc);
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
