@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#3A4F86">
 <title>우리 아이 건강수첩 · 블루코</title>
+<meta name="description" content="강아지·고양이 생애 단계별 건강체크, 사료 급여량 계산, 자주 생기는 질병 정보를 휴대폰에서 바로 확인하세요.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="우리 아이 건강수첩 · 블루코">
+<meta property="og:description" content="강아지·고양이 생애 단계별 건강체크, 사료 급여량 계산, 자주 생기는 질병 정보">
+<meta property="og:locale" content="ko_KR">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="건강수첩">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <style>
   :root {
     --coral: #E8836B;
@@ -658,6 +669,12 @@ const DATA = {
 
   renderAll();
 })();
+</script>
+<script>
+  // 홈 화면 설치·오프라인 사용(PWA)
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+  }
 </script>
 </body>
 </html>
